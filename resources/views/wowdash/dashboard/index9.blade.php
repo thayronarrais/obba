@@ -1,4 +1,4 @@
-@extends('layout.layout')
+@extends('wowdash.layout.layout')
 @php
     $title='Analytics';
     $subTitle = 'Analytics';

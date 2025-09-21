@@ -1,4 +1,4 @@
-@extends('layout.layout')
+@extends('wowdash.layout.layout')
 @php
     $title='Dashboard';
     $subTitle = 'CRM';
@@ -7,9 +7,9 @@
 
 @section('content')
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+    <div class="grid grid-cols-4 lg:grid-cols-12 gap-6 mt-6">
         <div class="lg:col-span-12 2xl:col-span-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div class="card px-4 py-5 shadow-2 rounded-lg border-gray-200 dark:border-neutral-600 h-full bg-gradient-to-l from-primary-600/10 to-bg-white">
                     <div class="card-body p-0">
                         <div class="flex flex-wrap items-center justify-between gap-1 mb-2">

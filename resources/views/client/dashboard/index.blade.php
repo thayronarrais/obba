@@ -1,7 +1,7 @@
 @extends('wowdash.layout.layout')
 @php
-    $title='Dashboard';
-    $subTitle = 'Medical';
+    $title='Olá, '.auth()->user()->name;
+    $subTitle = '';
     $script = '<script>
                     // ===================== Average Enrollment Rate Start =============================== 
                     function createChartTwo(chartId, color1, color2) {

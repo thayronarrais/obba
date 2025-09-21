@@ -25,7 +25,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('dashboard') }}">
+                <a href="{{ route('invoice.create') }}">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>
                     <span>Inserção manual</span>
                 </a>
@@ -37,7 +37,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('dashboard') }}">
+                <a href="{{ route('invoice.index') }}">
                     <iconify-icon icon="material-symbols:map-outline" class="menu-icon"></iconify-icon>
                     <span>Listagem de documentos</span>
                 </a>

@@ -40,7 +40,6 @@ class Invoice extends Model
     {
         return [
             'type' => InvoiceType::class,
-            'category' => InvoiceCategory::class,
             'date' => 'date',
             'total_iva' => 'decimal:2',
             'total' => 'decimal:2',
@@ -59,10 +58,10 @@ class Invoice extends Model
     /**
      * Category that this invoice belongs to
      */
-    // public function category(): BelongsTo
-    // {
-    //     return $this->belongsTo(InvoiceCategory::class, 'category_id');
-    // }
+    public function categoryData(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\InvoiceCategory::class, 'category');
+    }
 
     /**
      * User who created this invoice

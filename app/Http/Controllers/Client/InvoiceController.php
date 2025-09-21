@@ -24,14 +24,39 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        // Regular page load - get filter options only
+        $query = Invoice::with(['company', 'creator', 'categoryData'])->orderBy('date', 'desc');
+
+        // Apply filters
+        if ($request->filled('tipo')) {
+            $query->where('type', $request->tipo);
+        }
+
+        if ($request->filled('categoria')) {
+            $query->where('category_id', $request->categoria);
+        }
+
+        if ($request->filled('nif')) {
+            $query->where('nif', 'like', '%' . $request->nif . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->where('date', '<=', $request->date_to);
+        }
+
+        $invoices = $query->paginate(10)->withQueryString();
+
+        // Get filter options
         $companies = Company::orderBy('name')->get();
         $categories = InvoiceCategory::active()->ordered()->get();
         $years = Invoice::selectRaw('YEAR(date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');
-        $invoices = Invoice::with(['company', 'creator'])->orderBy('date', 'desc')->paginate(10);
+
         return view('client.invoices.index', compact(
             'companies',
             'categories',

@@ -19,33 +19,34 @@
             </li>
             <li class="sidebar-menu-group-title">Application</li>
             <li>
-                <a href="{{ route('dashboard') }}">
-                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                <a href="{{ route('invoice.scan') }}">
+                    
+                    <iconify-icon icon="bi:qr-code" class="menu-icon"></iconify-icon>
                     <span>Ler código QR</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('invoice.create') }}">
-                    <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>
+                    <iconify-icon icon="bi:file-earmark-plus" class="menu-icon"></iconify-icon>
                     <span>Inserção manual</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('dashboard') }}">
-                    <iconify-icon icon="solar:calendar-outline" class="menu-icon"></iconify-icon>
+                    <iconify-icon icon="bi:cloud-upload" class="menu-icon"></iconify-icon>
                     <span>Carregar documentos</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('invoice.index') }}">
-                    <iconify-icon icon="material-symbols:map-outline" class="menu-icon"></iconify-icon>
+                    <iconify-icon icon="bi:list-ul" class="menu-icon"></iconify-icon>
                     <span>Listagem de documentos</span>
                 </a>
             </li>
             
             <li class="dropdown">
                 <a href="javascript:void(0)">
-                    <iconify-icon icon="hugeicons:invoice-03" class="menu-icon"></iconify-icon>
+                    <iconify-icon icon="bi:receipt" class="menu-icon"></iconify-icon>
                     <span>Outras despesas</span>
                 </a>
                 <ul class="sidebar-submenu">

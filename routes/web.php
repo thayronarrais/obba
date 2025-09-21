@@ -33,12 +33,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Invoice routes
+    Route::get('invoice/scan', [InvoiceController::class, 'scan'])->name('invoice.scan');
     Route::resource('invoice', InvoiceController::class);
     Route::get('invoice/{invoice}/download', [InvoiceController::class, 'download'])->name('invoice.download');
     Route::post('invoice/exists', [InvoiceController::class, 'exists'])->name('invoice.exists');
     Route::delete('invoice/bulk-destroy', [InvoiceController::class, 'destroyBulk'])->name('invoice.bulk-destroy');
     Route::post('invoice/bulk-download', [InvoiceController::class, 'downloadBulk'])->name('invoice.bulk-download');
     Route::post('invoice/upload', [InvoiceController::class, 'upload'])->name('invoice.upload');
+
+    Route::post('/processar-qr-simples', [App\Http\Controllers\Client\InvoiceController::class, 'processSimpleQr'])->name('invoice.process-simple-qr');
+    Route::post('/guardar-fatura-simples', [App\Http\Controllers\Client\InvoiceController::class, 'storeSimpleInvoice'])->name('invoice.store-simple');
 });
 
 require __DIR__.'/auth.php';

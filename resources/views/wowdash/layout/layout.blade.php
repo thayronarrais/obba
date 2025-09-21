@@ -32,6 +32,7 @@
 
     <!-- ..::  scripts  start ::.. -->
     <x-script  script='{!! isset($script) ? $script : "" !!}' />
+    @stack('scripts')
     <!-- ..::  scripts  end ::.. -->
 
 </body>

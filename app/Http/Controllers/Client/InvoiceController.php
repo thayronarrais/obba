@@ -73,6 +73,14 @@ class InvoiceController extends Controller
 
         return view('client.invoices.create', compact('companies', 'categories'));
     }
+
+    public function scan()
+    {
+        $companies = Company::orderBy('name')->get();
+        $categories = InvoiceCategory::active()->ordered()->get();
+
+        return view('client.invoices.scan', compact('companies', 'categories'));
+    }
     /**
      * Check if invoice exists (AJAX)
      */
@@ -95,6 +103,91 @@ class InvoiceController extends Controller
         ]);
     }
 
+    /**
+     * Upload invoices in bulk (PDF)
+     */
+    public function upload(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'invoices' => 'required|array',
+            'invoices.*.file' => 'required|file|mimes:pdf|max:3072',
+            'invoices.*.data' => 'required|array',
+            'invoiceType' => ['required', Rule::in([InvoiceType::EXPENSE->value, InvoiceType::SALE->value])],
+            'invoiceCategoryId' => 'required_if:invoiceType,' . InvoiceType::EXPENSE->value . '|exists:invoice_categories,id',
+            'companyId' => 'required|exists:companies,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $successful = 0;
+        $failed = 0;
+        $errors = [];
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->invoices as $index => $invoiceData) {
+                try {
+                    $data = $invoiceData['data'];
+                    $date = Carbon::parse($data['F']);
+
+                    // Check if ATCUD already exists
+                    if (Invoice::where('atcud', $data['H'])->exists()) {
+                        $failed++;
+                        $errors[] = "Fatura {$index}: ATCUD {$data['H']} já existe";
+                        continue;
+                    }
+
+                    // Store file
+                    $fileName = $this->storeInvoiceFile($invoiceData['file'], $date);
+
+                    // Create invoice
+                    Invoice::create([
+                        'type' => $request->invoiceType,
+                        'category_id' => $request->invoiceCategoryId ?? null,
+                        'atcud' => $data['H'],
+                        'nif' => $data['A'],
+                        'date' => $date,
+                        'total_iva' => $data['N'],
+                        'total' => $data['O'],
+                        'files' => $fileName,
+                        'metadata' => $data,
+                        'company_id' => $request->companyId,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $successful++;
+
+                } catch (\Exception $e) {
+                    $failed++;
+                    $errors[] = "Fatura {$index}: " . $e->getMessage();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$successful} faturas criadas com sucesso. {$failed} falharam.",
+                'successful' => $successful,
+                'failed' => $failed,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro no upload: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Store a newly created invoice
      */
@@ -398,91 +491,6 @@ class InvoiceController extends Controller
         return back()->with('error', 'Erro ao criar arquivo ZIP.');
     }
 
-    /**
-     * Upload invoices in bulk (PDF)
-     */
-    public function upload(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'invoices' => 'required|array',
-            'invoices.*.file' => 'required|file|mimes:pdf|max:3072',
-            'invoices.*.data' => 'required|array',
-            'invoiceType' => ['required', Rule::in([InvoiceType::EXPENSE->value, InvoiceType::SALE->value])],
-            'invoiceCategoryId' => 'required_if:invoiceType,' . InvoiceType::EXPENSE->value . '|exists:invoice_categories,id',
-            'companyId' => 'required|exists:companies,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $successful = 0;
-        $failed = 0;
-        $errors = [];
-
-        try {
-            DB::beginTransaction();
-
-            foreach ($request->invoices as $index => $invoiceData) {
-                try {
-                    $data = $invoiceData['data'];
-                    $date = Carbon::parse($data['F']);
-
-                    // Check if ATCUD already exists
-                    if (Invoice::where('atcud', $data['H'])->exists()) {
-                        $failed++;
-                        $errors[] = "Fatura {$index}: ATCUD {$data['H']} já existe";
-                        continue;
-                    }
-
-                    // Store file
-                    $fileName = $this->storeInvoiceFile($invoiceData['file'], $date);
-
-                    // Create invoice
-                    Invoice::create([
-                        'type' => $request->invoiceType,
-                        'category_id' => $request->invoiceCategoryId ?? null,
-                        'atcud' => $data['H'],
-                        'nif' => $data['A'],
-                        'date' => $date,
-                        'total_iva' => $data['N'],
-                        'total' => $data['O'],
-                        'files' => $fileName,
-                        'metadata' => $data,
-                        'company_id' => $request->companyId,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    $successful++;
-
-                } catch (\Exception $e) {
-                    $failed++;
-                    $errors[] = "Fatura {$index}: " . $e->getMessage();
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => "{$successful} faturas criadas com sucesso. {$failed} falharam.",
-                'successful' => $successful,
-                'failed' => $failed,
-                'errors' => $errors
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro no upload: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Validate business rules
@@ -551,5 +559,91 @@ class InvoiceController extends Controller
         }
 
         return $csv;
+    }
+
+    public function processSimpleQr(Request $request)
+    {
+        $request->validate([
+            'qr_code_text' => 'required|string',
+        ]);
+
+        $qrCodeText = $request->input('qr_code_text');
+
+        // Basic format validation
+        if (!str_contains($qrCodeText, 'A:') || !str_contains($qrCodeText, 'B:')) {
+            return back()->with('error', 'Formato do código QR inválido.');
+        }
+
+        // Parse QR code
+        $parts = explode('*', $qrCodeText);
+        $qrData = [];
+        foreach ($parts as $part) {
+            $keyValue = explode(':', $part, 2);
+            if (count($keyValue) === 2) {
+                $qrData[$keyValue[0]] = $keyValue[1];
+            }
+        }
+
+        // Validate company NIF
+        $company = \App\Models\Company::where('nif', $qrData['B'])->first();
+        if (!$company) {
+            return back()->with('error', 'O NIF do adquirente no QR code não corresponde a nenhuma empresa configurada.');
+        }
+        
+        // Check for duplicates
+        if (\App\Models\Invoice::where('atcud', $qrData['H'])->exists()) {
+            return back()->with('error', 'Esta fatura já foi registada anteriormente.');
+        }
+
+        $categories = \App\Models\InvoiceCategory::active()->ordered()->get();
+
+        return view('client.invoices.confirm_simple_invoice', compact('qrData', 'categories'));
+    }
+
+    public function storeSimpleInvoice(Request $request)
+    {
+        $request->validate([
+            'qrData' => 'required|array',
+            'qrData.A' => 'required|string', // NIF emissor
+            'qrData.B' => 'required|string', // NIF adquirente
+            'qrData.F' => 'required|date', // Data
+            'qrData.H' => 'required|string|unique:invoices,atcud', // ATCUD
+            'qrData.N' => 'required|numeric|min:0', // Total IVA
+            'qrData.O' => 'required|numeric|min:0', // Total
+            'invoiceCategoryId' => 'required|exists:invoice_categories,id',
+        ]);
+
+        $qrData = $request->input('qrData');
+
+        $company = \App\Models\Company::where('nif', $qrData['B'])->firstOrFail();
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $invoice = \App\Models\Invoice::create([
+                'type' => \App\Enums\InvoiceType::EXPENSE, // Assuming it's always an expense
+                'category_id' => $request->invoiceCategoryId,
+                'atcud' => $qrData['H'],
+                'nif' => $qrData['A'],
+                'date' => \Carbon\Carbon::parse($qrData['F']),
+                'total_iva' => $qrData['N'],
+                'total' => $qrData['O'],
+                'files' => '', // No file
+                'metadata' => $qrData,
+                'company_id' => $company->id,
+                'created_by' => auth()->id(),
+            ]);
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return redirect()->route('invoice.show', $invoice)
+                ->with('success', 'Fatura criada com sucesso!');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollback();
+
+            return back()->withInput()
+                ->with('error', 'Erro ao criar fatura: ' . $e->getMessage());
+        }
     }
 }

@@ -1,15 +1,15 @@
 <x-guest-layout>
     <section class="bg-white dark:bg-dark-2 flex flex-wrap min-h-[100vh]">
-        <div class="lg:w-1/2 lg:block hidden">
-            <div class="flex items-center flex-col h-full justify-center">
-                <img src="{{ asset('assets/images/auth/auth-img.png') }}" alt="">
+        <div class="lg:w-1/2 lg:block hidden relative min-h-screen">
+            <div class="absolute  inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('{{ asset('site/bg.png') }}');">
+                <div class="absolute inset-0 bg-black bg-opacity-80" style="background-color: rgba(0, 0, 0, 0.8);"></div>
             </div>
         </div>
         <div class="lg:w-1/2 py-8 px-6 flex flex-col justify-center">
             <div class="lg:max-w-[464px] mx-auto w-full">
                 <div>
                     <a href="{{ route('dashboard') }}" class="mb-2.5 max-w-[290px]">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="">
+                        <img src="{{ asset('site/logo.png') }}" alt="">
                     </a>
                     <h4 class="mb-3">Sign Up to your Account</h4>
                     <p class="mb-8 text-secondary-light text-lg">Welcome back! please enter your detail</p>

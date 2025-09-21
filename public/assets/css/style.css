@@ -8899,3 +8899,8 @@ h6, .h6 {
     padding-right: 76px;
   }
 }
+
+/* Custom overlay opacity classes */
+.bg-opacity-80 {
+  --tw-bg-opacity: 0.8;
+}

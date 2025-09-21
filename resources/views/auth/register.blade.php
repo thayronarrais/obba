@@ -1,19 +1,23 @@
 <x-guest-layout>
     <section class="bg-white dark:bg-dark-2 flex flex-wrap min-h-[100vh] relative">
         <!-- Language Switcher -->
-        <div class="absolute top-4 right-4 z-10 flex gap-2">
+        <div style="position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; gap: 0.5rem;">
             <a href="{{ route('language.switch', 'en') }}"
-               class="px-3 py-2 text-sm font-medium rounded-md transition-colors
+               style="padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; text-decoration: none; transition: all 0.2s;
                       {{ app()->getLocale() == 'en'
-                         ? 'bg-primary-600 text-white'
-                         : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50' }}">
+                         ? 'background-color: #487FFF; color: white; border: 1px solid #487FFF;'
+                         : 'background-color: white; color: #374151; border: 1px solid #D1D5DB;' }}"
+               onmouseover="this.style.opacity='0.9'"
+               onmouseout="this.style.opacity='1'">
                 EN
             </a>
             <a href="{{ route('language.switch', 'pt') }}"
-               class="px-3 py-2 text-sm font-medium rounded-md transition-colors
+               style="padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; text-decoration: none; transition: all 0.2s;
                       {{ app()->getLocale() == 'pt'
-                         ? 'bg-primary-600 text-white'
-                         : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50' }}">
+                         ? 'background-color: #487FFF; color: white; border: 1px solid #487FFF;'
+                         : 'background-color: white; color: #374151; border: 1px solid #D1D5DB;' }}"
+               onmouseover="this.style.opacity='0.9'"
+               onmouseout="this.style.opacity='1'">
                 PT
             </a>
         </div>

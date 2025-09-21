@@ -66,8 +66,12 @@ class InvoiceController extends Controller
     }
 
    
-    public function create(){
-        return view('client.invoice.create');
+    public function create()
+    {
+        $companies = Company::orderBy('name')->get();
+        $categories = InvoiceCategory::active()->ordered()->get();
+
+        return view('client.invoices.create', compact('companies', 'categories'));
     }
     /**
      * Check if invoice exists (AJAX)
@@ -97,7 +101,8 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'invoiceAtcud' => 'required|string|unique:invoices,atcud',
+            'foreignExpense' => 'required|in:true,false',
+            'invoiceAtcud' => 'required_if:foreignExpense,false|nullable|string|unique:invoices,atcud',
             'invoiceType' => ['required', Rule::in([InvoiceType::EXPENSE->value, InvoiceType::SALE->value])],
             'invoiceCategoryId' => 'required_if:invoiceType,' . InvoiceType::EXPENSE->value . '|exists:invoice_categories,id',
             'invoiceCompanyId' => 'required|exists:companies,id',
@@ -106,7 +111,6 @@ class InvoiceController extends Controller
             'invoiceData.A' => 'required|string', // NIF emissor
             'invoiceData.B' => 'nullable|string', // NIF adquirente
             'invoiceData.F' => 'required|date', // Data
-            'invoiceData.H' => 'required|string', // ATCUD
             'invoiceData.N' => 'required|numeric|min:0', // Total IVA
             'invoiceData.O' => 'required|numeric|min:0', // Total
         ]);
@@ -127,11 +131,16 @@ class InvoiceController extends Controller
             // Store file
             $fileName = $this->storeInvoiceFile($request->file('invoiceImage'), $date);
 
+            $atcud = $request->invoiceAtcud;
+            if ($request->foreignExpense === 'true') {
+                $atcud = 'FR-' . uniqid();
+            }
+
             // Create invoice
             $invoice = Invoice::create([
                 'type' => $request->invoiceType,
                 'category_id' => $request->invoiceCategoryId ?? null,
-                'atcud' => $request->invoiceAtcud,
+                'atcud' => $atcud,
                 'nif' => $request->invoiceData['A'],
                 'date' => $date,
                 'total_iva' => $request->invoiceData['N'],

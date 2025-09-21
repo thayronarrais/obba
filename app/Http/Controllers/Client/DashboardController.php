@@ -50,7 +50,7 @@ class DashboardController extends Controller
 
         // Recent invoices
         $recentInvoices = (clone $invoiceQuery)
-            ->with(['company', 'category', 'creator'])
+            ->with(['company', 'categoryData', 'creator'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -59,7 +59,7 @@ class DashboardController extends Controller
         $expensesByCategory = (clone $invoiceQuery)
             ->inYear($currentYear)
             ->ofType(InvoiceType::EXPENSE)
-            ->with('category')
+            ->with('categoryData')
             ->get()
             ->groupBy('category.name')
             ->map(function ($invoices) {

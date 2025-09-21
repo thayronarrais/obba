@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\InvoiceController;
+use App\Http\Controllers\Client\SalaryController;
+use App\Http\Controllers\Client\KilometersController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\App;
@@ -41,8 +43,18 @@ Route::middleware('auth')->group(function () {
     Route::post('invoice/bulk-download', [InvoiceController::class, 'downloadBulk'])->name('invoice.bulk-download');
     Route::post('invoice/upload', [InvoiceController::class, 'upload'])->name('invoice.upload');
 
-    Route::post('/processar-qr-simples', [App\Http\Controllers\Client\InvoiceController::class, 'processSimpleQr'])->name('invoice.process-simple-qr');
-    Route::post('/guardar-fatura-simples', [App\Http\Controllers\Client\InvoiceController::class, 'storeSimpleInvoice'])->name('invoice.store-simple');
+    // Route::post('/processar-qr-simples', [App\Http\Controllers\Client\InvoiceController::class, 'processSimpleQr'])->name('invoice.process-simple-qr');
+    // Route::post('/guardar-fatura-simples', [App\Http\Controllers\Client\InvoiceController::class, 'storeSimpleInvoice'])->name('invoice.store-simple');
+
+    // Salary routes
+    Route::resource('salary', SalaryController::class);
+    Route::delete('salary/bulk-destroy', [SalaryController::class, 'destroyBulk'])->name('salary.bulk-destroy');
+    Route::get('salary/stats', [SalaryController::class, 'getStats'])->name('salary.stats');
+
+    // Kilometer routes
+    Route::resource('kilometer', KilometersController::class);
+    Route::delete('kilometer/bulk-destroy', [KilometersController::class, 'destroyBulk'])->name('kilometer.bulk-destroy');
+    Route::get('kilometer/stats', [KilometersController::class, 'getStats'])->name('kilometer.stats');
 });
 
 require __DIR__.'/auth.php';

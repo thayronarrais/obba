@@ -19,6 +19,8 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
+        "cropperjs": "^2.0.1",
+        "html5-qrcode": "^2.3.8",
         "iconify-icon": "^3.0.1"
     }
 }

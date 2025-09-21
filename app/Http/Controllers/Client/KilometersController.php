@@ -61,12 +61,18 @@ class KilometersController extends Controller
             });
         }
 
-        $kilometers = $query->orderBy('date', 'desc')->paginate(20);
+        $kilometers = $query->orderBy('date', 'desc')->paginate(10)->withQueryString();
 
-        // Statistics
-        $totalKilometers = $query->sum('kilometers');
-        $totalCost = $totalKilometers * 0.36;
-        $totalRecords = $query->count();
+        // Calculate totals for current filtered results
+        $totalQuery = clone $query;
+        $totalQuery->getQuery()->limit = null;
+        $totalQuery->getQuery()->offset = null;
+
+        $totals = [
+            'total_records' => $totalQuery->count(),
+            'total_kilometers' => $totalQuery->sum('kilometers'),
+            'total_cost' => $totalQuery->sum('kilometers') * 0.36,
+        ];
 
         // Get filter options
         $companies = Company::orderBy('name')->get();
@@ -75,13 +81,11 @@ class KilometersController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        return view('kilometers.index', compact(
+        return view('client.kilometers.index', compact(
             'kilometers',
             'companies',
             'years',
-            'totalKilometers',
-            'totalCost',
-            'totalRecords'
+            'totals'
         ));
     }
 
@@ -91,7 +95,7 @@ class KilometersController extends Controller
     public function create()
     {
         $companies = Company::orderBy('name')->get();
-        return view('kilometers.create', compact('companies'));
+        return view('client.kilometers.create', compact('companies'));
     }
 
     /**
@@ -109,8 +113,8 @@ class KilometersController extends Controller
             'reason' => 'required|string',
             'companyId' => 'required|exists:companies,id',
         ], [
-            'licensePlate.regex' => 'A matrícula deve seguir o formato XX-XX-XX (português)',
-            'kilometers.max' => 'Os quilómetros não podem exceder 999.999.999',
+            'licensePlate.regex' => 'A matrï¿½cula deve seguir o formato XX-XX-XX (portuguï¿½s)',
+            'kilometers.max' => 'Os quilï¿½metros nï¿½o podem exceder 999.999.999',
         ]);
 
         if ($validator->fails()) {
@@ -130,12 +134,96 @@ class KilometersController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            return redirect()->route('kilometers.index')
+            return redirect()->route('kilometer.index')
                 ->with('success', 'Registo de quilometragem criado com sucesso!');
 
         } catch (\Exception $e) {
             return back()->withInput()
                 ->with('error', 'Erro ao criar registo: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified kilometer
+     */
+    public function show(Kilometer $kilometer)
+    {
+        $user = Auth::user();
+
+        // Check permissions
+        if (!$user->canSeeAllData() && $kilometer->created_by !== $user->id) {
+            abort(403, 'NÃ£o tem permissÃ£o para ver este registo.');
+        }
+
+        $kilometer->load(['company', 'creator']);
+
+        return view('client.kilometers.show', compact('kilometer'));
+    }
+
+    /**
+     * Show the form for editing the specified kilometer
+     */
+    public function edit(Kilometer $kilometer)
+    {
+        $user = Auth::user();
+
+        // Check permissions
+        if (!$user->canSeeAllData() && $kilometer->created_by !== $user->id) {
+            abort(403, 'NÃ£o tem permissÃ£o para editar este registo.');
+        }
+
+        $companies = Company::orderBy('name')->get();
+
+        return view('client.kilometers.edit', compact('kilometer', 'companies'));
+    }
+
+    /**
+     * Update the specified kilometer
+     */
+    public function update(Request $request, Kilometer $kilometer)
+    {
+        $user = Auth::user();
+
+        // Check permissions
+        if (!$user->canSeeAllData() && $kilometer->created_by !== $user->id) {
+            abort(403, 'NÃ£o tem permissÃ£o para editar este registo.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:128',
+            'licensePlate' => 'required|string|max:12|regex:/^[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}$/',
+            'date' => 'required|date',
+            'origin' => 'required|string|max:256',
+            'destination' => 'required|string|max:256',
+            'kilometers' => 'required|integer|min:1|max:999999999',
+            'reason' => 'required|string',
+            'companyId' => 'required|exists:companies,id',
+        ], [
+            'licensePlate.regex' => 'A matrÃ­cula deve seguir o formato XX-XX-XX (portuguÃªs)',
+            'kilometers.max' => 'Os quilÃ³metros nÃ£o podem exceder 999.999.999',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            $kilometer->update([
+                'name' => $request->name,
+                'licenseplate' => strtoupper($request->licensePlate),
+                'date' => $request->date,
+                'origin' => $request->origin,
+                'destination' => $request->destination,
+                'kilometers' => $request->kilometers,
+                'reason' => $request->reason,
+                'company_id' => $request->companyId,
+            ]);
+
+            return back()->with('success', 'Registo atualizado com sucesso!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Erro ao atualizar registo: ' . $e->getMessage());
         }
     }
 
@@ -148,7 +236,7 @@ class KilometersController extends Controller
 
         // Check permissions
         if (!$user->canSeeAllData() && $kilometer->created_by !== $user->id) {
-            abort(403, 'Não tem permissão para eliminar este registo.');
+            abort(403, 'Nï¿½o tem permissï¿½o para eliminar este registo.');
         }
 
         try {
@@ -180,7 +268,7 @@ class KilometersController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'IDs inválidos fornecidos.'
+                'message' => 'IDs invï¿½lidos fornecidos.'
             ], 422);
         }
 
@@ -246,7 +334,7 @@ class KilometersController extends Controller
                 'total_cost' => $totalCost,
                 'total_trips' => $totalTrips,
                 'average_per_trip' => round($averagePerTrip, 2),
-                'formatted_total_cost' => number_format($totalCost, 2, ',', '.') . ' ¬',
+                'formatted_total_cost' => number_format($totalCost, 2, ',', '.') . ' ï¿½',
                 'formatted_total_kilometers' => number_format($totalKilometers, 0, ',', '.') . ' km',
             ]
         ]);

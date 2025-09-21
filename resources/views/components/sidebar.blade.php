@@ -51,10 +51,10 @@
                 </a>
                 <ul class="sidebar-submenu">
                     <li>
-                        <a href="{{ route('dashboard') }}"><i class="ri-circle-fill circle-icon text-primary-600 w-auto"></i> Salários</a>
+                        <a href="{{ route('salary.index') }}"><i class="ri-circle-fill circle-icon text-primary-600 w-auto"></i> Salários</a>
                     </li>
                     <li>
-                        <a href="{{ route('dashboard') }}"><i class="ri-circle-fill circle-icon text-warning-600 w-auto"></i> Quilometros</a>
+                        <a href="{{ route('kilometer.index') }}"><i class="ri-circle-fill circle-icon text-warning-600 w-auto"></i> Quilometros</a>
                     </li>
                     
                 </ul>

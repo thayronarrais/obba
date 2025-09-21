@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Session;
 
 Route::get('/', function () {
     return view('welcome');
@@ -10,6 +12,15 @@ Route::get('/', function () {
 Route::get('/template', function () {
     return view('wowdash.dashboard.index');
 });
+
+// Language switching route
+Route::get('/language/{locale}', function ($locale) {
+    if (in_array($locale, ['en', 'pt'])) {
+        Session::put('locale', $locale);
+        App::setLocale($locale);
+    }
+    return redirect()->back();
+})->name('language.switch');
 
 
 Route::middleware('auth')->group(function () {
